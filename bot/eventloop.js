@@ -19,21 +19,17 @@ module.exports.createBot = function (botObject, next) {
   }
   return chatApp(credentials, loginOptions, function(err, api) {
     if (err) {
-      return bus.emit("starting_error", err, botObject.id);
+      return bus.emit("starting_error", err.error);
     }
-    console.log("Create api object");
-    currentBots[botObject.id].api = api;
+    botObject.api = api;
     next(botObject);
   });
 }
 
 module.exports.startBot = function (botObject) {
-  if (botObject.api == undefined) {
-    bus.emit("error", {"error": "API object is undefined"}, botObject.id);
-  }
   var killfn = botObject.api.listen(function (err, message) {
     if (err) {
-      bus.emit("error", err, botObject.id);
+      bus.emit("error", err.error);
     }
     cache.load(botObject.api, message.threadID, function() {
       for (var f in functions) {
@@ -45,8 +41,8 @@ module.exports.startBot = function (botObject) {
       };
     });
   });
-
+  botObject.is_running = true;
   botObject.killFunc = killfn;
-  return botObject.id;
+  return;
 }
 
